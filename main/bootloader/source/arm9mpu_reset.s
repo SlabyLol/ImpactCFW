@@ -1,3 +1,4 @@
+/* MPU-Reset */
 	.arm
 	.global mpu_reset, mpu_reset_end
 
