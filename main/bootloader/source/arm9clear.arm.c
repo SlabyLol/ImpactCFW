@@ -13,7 +13,7 @@
 
 #include "boot.h"
 
-/*-------------------------------------------------------------------------
+/*------------------------------------------------------------------------
 resetMemory2_ARM9
 Clears the ARM9's DMA channels and resets video memory
 Written by Darkain.
