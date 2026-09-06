@@ -1,4 +1,4 @@
-<img src="https://github.com/Universal-Team/Relaunch/blob/master/logo.png?raw=true">
+<img src="https://github.com/Universal-Team/Relaunch/blob/master/logo.svg?raw=true">
 <h4 align="center">Made by Universal-Team</h4>
 <p align="center">
   <a href="https://discord.gg/KDJCfGF">
