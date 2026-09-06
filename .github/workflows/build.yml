@@ -1,4 +1,4 @@
-name: Build Relaunch
+name: Build ImpactCFW
 
 on:
   push:
