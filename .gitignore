@@ -2,6 +2,7 @@
 *.d
 *.elf
 *.cia
+*.dlis
 *.map
 *.DS_Store
 *.nds
