@@ -1,6 +1,5 @@
 /*-----------------------------------------------------------------
- fat.h
- 
+ fat.h 
  NDS MP
  GBAMP NDS Firmware Hack Version 2.12
  An NDS aware firmware patch for the GBA Movie Player.
