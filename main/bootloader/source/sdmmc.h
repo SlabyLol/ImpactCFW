@@ -48,7 +48,7 @@
 
 #define REG_CLK_AND_WAIT_CTL    0x138
 #define REG_RESET_SDIO          0x1e0
-//The below defines are from linux kernel drivers/mmc tmio_mmc.h.
+//The below defines are from linux kernel drivers/mmc tmio_mmc.h. This should work.
 /* Definitions for values the CTRL_STATUS register can take. */
 #define TMIO_STAT0_CMDRESPEND    0x0001
 #define TMIO_STAT0_DATAEND       0x0004
