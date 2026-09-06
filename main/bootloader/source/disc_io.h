@@ -1,6 +1,6 @@
 /*
  disc_io.h
- Interface template for low level disc functions.
+ Interface template for low level disc functions
 
  Copyright (c) 2006 Michael "Chishm" Chisholm
 	
