@@ -16,7 +16,7 @@ buildAA:
 	@mv "main/Relaunch.nds" "Relaunch/Relaunch.nds"
 
 makecia:
-	@./make_cia --srl="Relaunch/Relaunch.nds"
+	@if [ -f "./make_cia" ]; then ./make_cia --srl="Relaunch/Relaunch.nds"; else echo "Skipping CIA generation (make_cia executable not found)"; fi
 
 clean:
 	@echo clean build directories
