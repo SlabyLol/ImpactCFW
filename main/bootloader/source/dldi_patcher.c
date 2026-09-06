@@ -1,5 +1,4 @@
 /*-----------------------------------------------------------------
-
  Copyright (C) 2005  Michael "Chishm" Chisholm
 
  This program is free software; you can redistribute it and/or
