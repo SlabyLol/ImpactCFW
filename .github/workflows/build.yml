@@ -2,36 +2,25 @@ name: Build Relaunch
 
 on:
   push:
-    branches-ignore:
-      - translation
+    branches-ignore: [translation]
     paths-ignore:
-      - README.md
-
+      - 'README.md'
   pull_request:
-    branches:
-      - "*"
+    branches: ["*"]
     paths-ignore:
-      - README.md
-
+      - 'README.md'
   release:
-    types:
-      - published
-
+    types: [published]
   workflow_dispatch:
 
 concurrency:
-  group: ci-${{ startsWith(github.ref, 'refs/pull/') && github.ref || 'publish' }}
-  cancel-in-progress: false
-
-permissions:
-  contents: write
+  group: ci-${{ startsWith(github.ref, 'refs/pull') && github.ref || 'publish' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     container: devkitpro/devkitarm:20241104
     name: Build with Docker using devkitARM
-
     outputs:
       commit_tag: ${{ steps.build.outputs.commit_tag }}
       commit_hash: ${{ steps.build.outputs.commit_hash }}
@@ -39,201 +28,137 @@ jobs:
       committer_name: ${{ steps.build.outputs.committer_name }}
       commit_subject: ${{ steps.build.outputs.commit_subject }}
       commit_message: ${{ steps.build.outputs.commit_message }}
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 0
-
       - name: Setup environment
-        run: |
-          git config --global safe.directory '*'
-
+        run: git config --global safe.directory '*'
       - name: Install tools
         run: |
-          apt-get update
-          apt-get install -y p7zip-full curl jq
-
+          sudo apt-get update
+          sudo apt-get install p7zip-full -y
       - name: Build
         id: build
-        shell: bash
         run: |
-          set -e
-
           make
 
-          7z a ImpactCFW.7z ImpactCFW
+          7z a Relaunch.7z Relaunch
 
-          mkdir -p "$HOME/artifacts"
-          cp ImpactCFW.7z "$HOME/artifacts/"
+          mkdir -p ~/artifacts
+          cp Relaunch.7z ~/artifacts
 
-          # Git information
-          echo "commit_tag=$(git describe --abbrev=0 --tags --exclude=git 2>/dev/null || echo unknown)" >> "$GITHUB_OUTPUT"
-          echo "commit_hash=$(git log --format=%h -1)" >> "$GITHUB_OUTPUT"
+          echo ::set-output name=commit_tag::$(git describe --abbrev=0 --tags --exclude git)
+          echo ::set-output name=commit_hash::$(git log --format=%h -1)
 
-          # Webhook information
-          {
-            echo "author_name=$(git log -1 "$GITHUB_SHA" --pretty=%aN)"
-            echo "committer_name=$(git log -1 "$GITHUB_SHA" --pretty=%cN)"
-            echo "commit_subject=$(git log -1 "$GITHUB_SHA" --pretty=%s)"
-          } >> "$GITHUB_OUTPUT"
-
-          echo "commit_message<<EOF" >> "$GITHUB_OUTPUT"
-          git log -1 "$GITHUB_SHA" --pretty=%b >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-
+          # Webhook info
+          echo "::set-output name=author_name::$(git log -1 $GITHUB_SHA --pretty=%aN)"
+          echo "::set-output name=committer_name::$(git log -1 $GITHUB_SHA --pretty=%cN)"
+          echo "::set-output name=commit_subject::$(git log -1 $GITHUB_SHA --pretty=%s)"
+          echo "::set-output name=commit_message::$(git log -1 $GITHUB_SHA --pretty=%b)"
       - name: Publish build to GH Actions
         uses: actions/upload-artifact@v4
         with:
-          name: build
           path: ~/artifacts/*
-          if-no-files-found: error
-
+          name: build
 
   # Only run this for non-PR jobs.
   publish_build:
     runs-on: ubuntu-latest
     name: Publish build
+    if: ${{ success() && !startsWith(github.ref, 'refs/pull') }}
     needs: build
-
-    if: ${{ !startsWith(github.ref, 'refs/pull/') }}
-
     env:
       COMMIT_TAG: ${{ needs.build.outputs.commit_tag }}
       COMMIT_HASH: ${{ needs.build.outputs.commit_hash }}
       AUTHOR_NAME: ${{ needs.build.outputs.author_name }}
       COMMIT_SUBJECT: ${{ needs.build.outputs.commit_subject }}
       COMMIT_MESSAGE: ${{ needs.build.outputs.commit_message }}
-
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: build
           path: build
-
+        # This one always runs
       - name: Delete the 'git' release
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
+          # Get the release ID for tag 'git'
+          AUTH_HEADER="Authorization: token ${{ secrets.GITHUB_TOKEN }}"
+          CONTENT_TYPE="Content-Type: application/json"
+          API_URL="https://api.github.com/repos/${{ github.repository }}/releases/tags/git"
 
-          RELEASE_ID=$(gh api \
-            "/repos/${GITHUB_REPOSITORY}/releases/tags/git" \
-            --jq '.id' 2>/dev/null || true)
-
-          if [ -n "$RELEASE_ID" ] && [ "$RELEASE_ID" != "null" ]; then
-            echo "Deleting existing git release: $RELEASE_ID"
-
-            gh api \
-              --method DELETE \
-              "/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}"
-          else
-            echo "No existing git release found."
+          RESPONSE=$(curl -H "$AUTH_HEADER" -H "$CONTENT_TYPE" "$API_URL")
+          STATUS=$(echo $RESPONSE | jq -r .status)
+          if [ "$STATUS" != "404" ]; then
+            # If it exists, delete it
+            ID=$(echo $RESPONSE | jq -r .id)
+            API_URL="https://api.github.com/repos/${{ github.repository }}/releases/$ID"
+            curl -XDELETE -H "$AUTH_HEADER" -H "$CONTENT_TYPE" "$API_URL"
           fi
 
-      - name: Upload to release
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # This one only runs for releases
+      - name: Upload to ${{ github.ref_name }} release
+        if: ${{ startsWith(github.ref, 'refs/tags') }}
         run: |
-          set -e
+          ID=$(jq -r '.release.id' $GITHUB_EVENT_PATH)
 
-          RELEASE_ID=$(gh api \
-            "/repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" \
-            --jq '.id')
+          for file in ${{ github.workspace }}/build/*; do
+            AUTH_HEADER="Authorization: token ${{ secrets.GITHUB_TOKEN }}"
+            CONTENT_LENGTH="Content-Length: $(stat -c%s $file)"
+            CONTENT_TYPE="Content-Type: application/7z-x-compressed"
+            UPLOAD_URL="https://uploads.github.com/repos/${{ github.repository }}/releases/$ID/assets?name=$(basename $file)"
 
-          for file in "${GITHUB_WORKSPACE}"/build/*; do
-            echo "Uploading $(basename "$file")"
-
-            gh release upload \
-              "${GITHUB_REF_NAME}" \
-              "$file" \
-              --repo "$GITHUB_REPOSITORY" \
-              --clobber
+            curl -XPOST -H "$AUTH_HEADER" -H "$CONTENT_LENGTH" -H "$CONTENT_TYPE" --upload-file "$file" "$UPLOAD_URL"
           done
-
-      - name: Create 'git' release
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+        # This one only runs if it's not a release run
+      - name: Upload to 'git' release
+        if: ${{ !startsWith(github.ref, 'refs/tags') }}
         run: |
-          set -e
+          AUTH_HEADER="Authorization: token ${{ secrets.GITHUB_TOKEN }}"
+          CONTENT_TYPE="Content-Type: application/json"
+          API_URL="https://api.github.com/repos/${{ github.repository }}/releases"
+          RELEASE_INFO="{\"tag_name\": \"git\", \"name\": \"Continuous Build - $COMMIT_HASH\", \"body\": \"$AUTHOR_NAME - $COMMIT_SUBJECT\n\n$COMMIT_MESSAGE\", \"prerelease\": true}"
 
-          BODY="${AUTHOR_NAME} - ${COMMIT_SUBJECT}
+          RESPONSE=$(curl -XPOST -H "$AUTH_HEADER" -H "$CONTENT_TYPE" "$API_URL" -d "$RELEASE_INFO")
+          ID=$(echo $RESPONSE | jq -r '.id')
 
-          ${COMMIT_MESSAGE}"
+          for file in ${{ github.workspace }}/build/*; do
+            CONTENT_LENGTH="Content-Length: $(stat -c%s $file)"
+            CONTENT_TYPE="Content-Type: application/7z-x-compressed"
+            UPLOAD_URL="https://uploads.github.com/repos/${{ github.repository }}/releases/$ID/assets?name=$(basename $file)"
 
-          gh release create git \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "Continuous Build - ${COMMIT_HASH}" \
-            --notes "$BODY" \
-            --prerelease \
-            --target "$GITHUB_SHA"
-
-          for file in "${GITHUB_WORKSPACE}"/build/*; do
-            echo "Uploading $(basename "$file")"
-
-            gh release upload \
-              git \
-              "$file" \
-              --repo "$GITHUB_REPOSITORY" \
-              --clobber
+            curl -XPOST -H "$AUTH_HEADER" -H "$CONTENT_LENGTH" -H "$CONTENT_TYPE" --upload-file "$file" "$UPLOAD_URL"
           done
-
 
   send_success_webhook:
     runs-on: ubuntu-latest
+    needs: [publish_build, build]
     name: Send success webhook
-    needs:
-      - build
-      - publish_build
-
-    if: ${{ !startsWith(github.ref, 'refs/pull/') && success() }}
-
+    if: ${{ !startsWith(github.ref, 'refs/pull') && success() }}
     env:
       COMMIT_HASH: ${{ needs.build.outputs.commit_hash }}
       AUTHOR_NAME: ${{ needs.build.outputs.author_name }}
       COMMITTER_NAME: ${{ needs.build.outputs.committer_name }}
       COMMIT_SUBJECT: ${{ needs.build.outputs.commit_subject }}
       COMMIT_MESSAGE: ${{ needs.build.outputs.commit_message }}
-
     steps:
       - name: Send success webhook
-        shell: bash
-        env:
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
         run: |
-          set -e
-
-          if [ -z "$WEBHOOK_URL" ]; then
-            echo "WEBHOOK_URL secret is not configured."
-            exit 1
-          fi
-
-          jq -n \
-            --arg hash "$COMMIT_HASH" \
-            --arg author "$AUTHOR_NAME" \
-            --arg committer "$COMMITTER_NAME" \
-            --arg subject "$COMMIT_SUBJECT" \
-            --arg message "$COMMIT_MESSAGE" \
-            '{
-              commit_hash: $hash,
-              author_name: $author,
-              committer_name: $committer,
-              commit_subject: $subject,
-              commit_message: $message
-            }' |
-          curl \
-            --fail \
-            --silent \
-            --show-error \
-            -X POST \
-            -H "Content-Type: application/json" \
-            --data-binary @- \
-            "$WEBHOOK_URL"
+          curl -o send.sh https://raw.githubusercontent.com/Universal-Team/discord-webhooks/master/send-ghactions.sh
+          chmod +x send.sh
+          ./send.sh success ${{ secrets.WEBHOOK_URL }}
+  send_failure_webhook:
+    runs-on: ubuntu-latest
+    needs: [publish_build, build]
+    name: Send failure webhook
+    if: ${{ !startsWith(github.ref, 'refs/pull') && failure() }}
+    steps:
+      - name: Send failure webhook
+        run: |
+          curl -o send.sh https://raw.githubusercontent.com/Universal-Team/discord-webhooks/master/send-ghactions.sh
+          chmod +x send.sh
+          ./send.sh failure ${{ secrets.WEBHOOK_URL }}
