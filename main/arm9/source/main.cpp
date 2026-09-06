@@ -82,54 +82,54 @@ int main(int argc, char **argv) {
 
 	CIniFile ini("/_nds/Relaunch/Relaunch.ini");
 	
-	bootA = ini.GetString("RELAUNCH", "BOOT_A_PATH", bootA);
-	bootB = ini.GetString("RELAUNCH", "BOOT_B_PATH", bootB);
-	bootX = ini.GetString("RELAUNCH", "BOOT_X_PATH", bootX);
-	bootY = ini.GetString("RELAUNCH", "BOOT_Y_PATH", bootY);
-	bootR = ini.GetString("RELAUNCH", "BOOT_R_PATH", bootR);
-	bootL = ini.GetString("RELAUNCH", "BOOT_L_PATH", bootL);
-	bootDown = ini.GetString("RELAUNCH", "BOOT_DOWN_PATH", bootDown);
-	bootUp = ini.GetString("RELAUNCH", "BOOT_UP_PATH", bootUp);
-	bootLeft = ini.GetString("RELAUNCH", "BOOT_LEFT_PATH", bootLeft);
-	bootRight = ini.GetString("RELAUNCH", "BOOT_RIGHT_PATH", bootRight);
-	bootStart = ini.GetString("RELAUNCH", "BOOT_START_PATH", bootStart);
-	bootSelect = ini.GetString("RELAUNCH", "BOOT_SELECT_PATH", bootSelect);
-	bootTouch = ini.GetString("RELAUNCH", "BOOT_TOUCH_PATH", bootTouch);
-	bootDefault = ini.GetString("RELAUNCH", "BOOT_DEFAULT_PATH", bootDefault);
+	bootA = ini.GetString("IMPACTCFW", "BOOT_A_PATH", bootA);
+	bootB = ini.GetString("IMPACTCFW", "BOOT_B_PATH", bootB);
+	bootX = ini.GetString("IMPACTCFW", "BOOT_X_PATH", bootX);
+	bootY = ini.GetString("IMPACTCFW", "BOOT_Y_PATH", bootY);
+	bootR = ini.GetString("IMPACTCFW", "BOOT_R_PATH", bootR);
+	bootL = ini.GetString("IMPACTCFW", "BOOT_L_PATH", bootL);
+	bootDown = ini.GetString("IMPACTCFW", "BOOT_DOWN_PATH", bootDown);
+	bootUp = ini.GetString("IMPACTCFW", "BOOT_UP_PATH", bootUp);
+	bootLeft = ini.GetString("IMPACTCFW", "BOOT_LEFT_PATH", bootLeft);
+	bootRight = ini.GetString("IMPACTCFW", "BOOT_RIGHT_PATH", bootRight);
+	bootStart = ini.GetString("IMPACTCFW", "BOOT_START_PATH", bootStart);
+	bootSelect = ini.GetString("IMPACTCFW", "BOOT_SELECT_PATH", bootSelect);
+	bootTouch = ini.GetString("IMPACTCFW", "BOOT_TOUCH_PATH", bootTouch);
+	bootDefault = ini.GetString("IMPACTCFW", "BOOT_DEFAULT_PATH", bootDefault);
 
-	ini.SetString("RELAUNCH", "BOOT_A_PATH", bootA);
-	ini.SetString("RELAUNCH", "BOOT_B_PATH", bootB);
-	ini.SetString("RELAUNCH", "BOOT_X_PATH", bootX);
-	ini.SetString("RELAUNCH", "BOOT_Y_PATH", bootY);
-	ini.SetString("RELAUNCH", "BOOT_R_PATH", bootR);
-	ini.SetString("RELAUNCH", "BOOT_L_PATH", bootL);
-	ini.SetString("RELAUNCH", "BOOT_DOWN_PATH", bootDown);
-	ini.SetString("RELAUNCH", "BOOT_UP_PATH", bootUp);
-	ini.SetString("RELAUNCH", "BOOT_LEFT_PATH", bootLeft);
-	ini.SetString("RELAUNCH", "BOOT_RIGHT_PATH", bootRight);
-	ini.SetString("RELAUNCH", "BOOT_START_PATH", bootStart);
-	ini.SetString("RELAUNCH", "BOOT_SELECT_PATH", bootSelect);
-	ini.SetString("RELAUNCH", "BOOT_TOUCH_PATH", bootTouch);
-	ini.SetString("RELAUNCH", "BOOT_DEFAULT_PATH", bootDefault);
+	ini.SetString("IMPACTCFW", "BOOT_A_PATH", bootA);
+	ini.SetString("IMPACTCFW", "BOOT_B_PATH", bootB);
+	ini.SetString("IMPACTCFW", "BOOT_X_PATH", bootX);
+	ini.SetString("IMPACTCFW", "BOOT_Y_PATH", bootY);
+	ini.SetString("IMPACTCFW", "BOOT_R_PATH", bootR);
+	ini.SetString("IMPACTCFW", "BOOT_L_PATH", bootL);
+	ini.SetString("IMPACTCFW", "BOOT_DOWN_PATH", bootDown);
+	ini.SetString("IMPACTCFW", "BOOT_UP_PATH", bootUp);
+	ini.SetString("IMPACTCFW", "BOOT_LEFT_PATH", bootLeft);
+	ini.SetString("IMPACTCFW", "BOOT_RIGHT_PATH", bootRight);
+	ini.SetString("IMPACTCFW", "BOOT_START_PATH", bootStart);
+	ini.SetString("IMPACTCFW", "BOOT_SELECT_PATH", bootSelect);
+	ini.SetString("IMPACTCFW", "BOOT_TOUCH_PATH", bootTouch);
+	ini.SetString("IMPACTCFW", "BOOT_DEFAULT_PATH", bootDefault);
 
 	mkdir("/_nds/",0777);
-	mkdir("/_nds/Relaunch/",0777);
-	mkdir("/_nds/Relaunch/extras",0777);
-	ini.SaveIniFile("/_nds/Relaunch/Relaunch.ini");
+	mkdir("/_nds/ImpactCFW/",0777);
+	mkdir("/_nds/ImpactCFW/extras",0777);
+	ini.SaveIniFile("/_nds/ImpactCFW/ImpactCFW.ini");
 
   scanKeys();
 	int pressed = keysHeld();
 
 	if ((pressed & (KEY_A | KEY_B)) == (KEY_A | KEY_B)) { // menu
-		if((access("_nds/Relaunch/menu.bin", F_OK) == 0)) {
-			runNdsFile("_nds/Relaunch/menu.bin", 0, NULL, false);
+		if((access("_nds/ImpactCFW/menu.bin", F_OK) == 0)) {
+			runNdsFile("_nds/ImpactCFW/menu.bin", 0, NULL, false);
 		} else {
 			printf("Error:\nmenu.bin wasn't found!");
 			stop();
 		}
 	} else if ((pressed & (KEY_A | KEY_X)) == (KEY_A | KEY_X)) { // menu alt
-		if((access("_nds/Relaunch/menu.bin", F_OK) == 0)) {
-			runNdsFile("_nds/Relaunch/menu.bin", 0, NULL, false);
+		if((access("_nds/ImpactCFW/menu.bin", F_OK) == 0)) {
+			runNdsFile("_nds/ImpactCFW/menu.bin", 0, NULL, false);
 		} else {
 			printf("Error:\nmenu.bin wasn't found!");
 			stop();
