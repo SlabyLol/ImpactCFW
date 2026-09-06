@@ -71,8 +71,8 @@ export TOPDIR	:=	$(CURDIR)
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(DATA),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(GRAPHICS),$(CURDIR)/$(dir))
+				$(foreach dir,$(DATA),$(CURDIR)/$(dir)) \
+				$(foreach dir,$(GRAPHICS),$(CURDIR)/$(dir))
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
@@ -102,12 +102,12 @@ endif
 #---------------------------------------------------------------------------------
 
 export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
-					$(BMPFILES:.bmp=.o) \
-					$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+				$(BMPFILES:.bmp=.o) \
+				$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
  
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-iquote $(CURDIR)/$(dir)) \
-					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-					-I$(CURDIR)/$(BUILD)
+				$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+				-I$(CURDIR)/$(BUILD)
  
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
@@ -136,7 +136,7 @@ dist:	all
 	
 $(TARGET).nds:	$(TARGET).arm7 $(TARGET).arm9
 	ndstool	-c $(TARGET).nds -7 $(TARGET).arm7.elf -9 $(TARGET).arm9.elf \
-			-z 80040000 -u 00030004 -a 00000143 -d $(NITRODATA) -b icon.bmp "Relaunch Menu;Universal-Team"
+			-z 80040000 -u 00030004 -a 00000143 -d $(NITRODATA) -b icon.bmp "ImpactCFW Menu;Universal-Team"
 		
 $(TARGET).arm7: arm7/$(TARGET).elf
 	cp arm7/$(TARGET).elf $(TARGET).arm7.elf
