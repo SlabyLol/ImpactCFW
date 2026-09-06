@@ -4,7 +4,7 @@
 .SECONDARY:
 
 ifeq ($(strip $(DEVKITARM)),)
-$(error "Please set DEVKITARM in your environment. export DEVKITARM=<path to>devkitARM")
+$(error "Please set DEVKITARM in your environment. exportDEVKITARM=<path to>devkitARM")
 endif
 
 include $(DEVKITARM)/ds_rules
@@ -130,11 +130,11 @@ $(TARGET).arm9: arm9/$(TARGET).elf
 
 #---------------------------------------------------------------------------------
 arm7/$(TARGET).elf:
-	@$(MAKE) -C arm7
+	@$(MAKE) -C arm7 TARGET=$(TARGET)
 
 #---------------------------------------------------------------------------------
 arm9/$(TARGET).elf:
-	@$(MAKE) -C arm9
+	@$(MAKE) -C arm9 TARGET=$(TARGET)
 
 #---------------------------------------------------------------------------------
 #$(BUILD):
@@ -162,13 +162,13 @@ bootstub: data
 	@$(MAKE) -C bootstub
 
 #---------------------------------------------------------------------------------
-else
+#else
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
 #$(OUTPUT).nds	: 	$(OUTPUT).elf
-#$(OUTPUT).elf	:	$(OFILES)
+#$(OUTPUT).elf	: 	$(OFILES)
 
 #---------------------------------------------------------------------------------
 %.bin.o	:	%.bin
